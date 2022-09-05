@@ -4,9 +4,7 @@ from django.test import TestCase
 from recipes.models import Category, Recipe, User
 
 
-class RecipeTestBase(TestCase):
-    def setUp(self) -> None: #EXECUTA ANTES DE FAZER QUALQUER TESTE
-        return super().setUp()
+class RecipeMixin:
 
     def make_category(self, name='Category'):
         return Category.objects.create(name=name)
@@ -61,3 +59,19 @@ class RecipeTestBase(TestCase):
             preparation_steps = preparation_steps,
             preparation_steps_is_html = preparation_steps_is_html,
             is_published = is_published)
+    
+    def make_recipe_in_batch(self, qtd=10):
+        recipes = []
+        for i_recipe in range(qtd):
+            recipe = self.make_recipe(
+            slug = f'slug-{i_recipe}' ,
+            title = f'titulo {i_recipe}',
+            author_data = {'username':f'user{i_recipe}'}
+            )
+            recipes.append(recipe)
+        return recipes
+
+class RecipeTestBase(TestCase, RecipeMixin):
+    def setUp(self) -> None: #EXECUTA ANTES DE FAZER QUALQUER TESTE
+        return super().setUp()
+
