@@ -130,4 +130,4 @@ db copy.sqlite3
 static/
 
 #Add again for course purpouse
-!db.sqlite3
+#!db.sqlite3
