@@ -32,6 +32,7 @@ DEBUG = True if os.environ.get('DEBUG') == '1' else False
 
 ALLOWED_HOSTS = ['https://*.rochaprestadora.com.br','https://*.127.0.0.1','cursodjango.rochaprestadora.com.br']
 
+CSRF_TRUSTED_ORIGINS = ['https://*.rochaprestadora.com.br','https://*.127.0.0.1']
 
 # Application definition
 
