@@ -16,6 +16,7 @@ from pickle import FALSE
 from webbrowser import get
 
 from django.contrib.messages import constants
+from utils.environment import get_env_variable, parse_comma_sep_str_to_list
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -30,9 +31,9 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'INSECURE')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True if os.environ.get('DEBUG') == '1' else False
 
-ALLOWED_HOSTS = ['https://*.rochaprestadora.com.br','127.0.0.1','cursodjango.rochaprestadora.com.br']
+ALLOWED_HOSTS: list[str] = parse_comma_sep_str_to_list(get_env_variable('ALLOWED_HOSTS'))
 
-CSRF_TRUSTED_ORIGINS = ['https://*.rochaprestadora.com.br','https://*.127.0.0.1']
+CSRF_TRUSTED_ORIGINS: list[str] = parse_comma_sep_str_to_list(get_env_variable('CSRF_TRUSTED_ORIGINS'))
 
 # Application definition
 
