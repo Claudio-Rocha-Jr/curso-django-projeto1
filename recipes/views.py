@@ -3,11 +3,14 @@ import os
 
 #from django.contrib import messages
 from django.core.paginator import Paginator
-from django.db.models import Q
+from django.db.models import F, Q, Value
+from django.db.models.aggregates import Count
+from django.db.models.functions import Concat
 from django.forms.models import model_to_dict
 from django.http import Http404, JsonResponse
 from django.shortcuts import get_list_or_404, get_object_or_404, render
 from django.views.generic import DetailView, ListView
+from tag.models import Tag
 from utils.pagination import make_pagination
 from utils.recipes.factory import make_recipe
 
@@ -15,6 +18,31 @@ from utils.recipes.factory import make_recipe
 from recipes.models import Recipe
 
 PER_PAGE = int(os.environ.get('PER_PAGE', 6))
+
+def theory(request, *args, **kwargs):
+    #recipes = Recipe.objects.filter(title__icontains='333').select_related('author') #funciona
+    #print(recipes[1].title)
+    #recipes = Recipe.objects.filter(title__icontains="1").select_related('author')[:10]
+    #recipes = Recipe.objects.raw("select r.*,a.* from recipes_recipe r left join auth_user a on a.id = r.author_id")[0:10]
+    # recipes = Recipe.objects.filter(
+    #     id=F('author__id')
+    # )
+    #recipes = Recipe.objects.values('id','title','author__first_name')[:10]
+    # recipes = Recipe.objects.all().annotate(
+    #     author_full_name=Concat(F('author__first_name'),Value(' '),F('author__last_name'))
+    # )[:5]
+
+    recipes = Recipe.objects.get_full_name(10)
+    number_of_recipes = recipes.aggregate(number=Count('id'))
+    context = {
+        'recipes':recipes,
+        'number_of_recipes':number_of_recipes
+    }
+    return render(
+        request,
+        'recipes/pages/theory.html',
+        context=context
+    )
 
 class RecipeListViewBase(ListView):
     model = Recipe
@@ -216,3 +244,26 @@ class RecipeDetailAPI(RecipeDetail):
         del recipe_dict['preparation_steps_is_html']
 
         return JsonResponse(recipe_dict,safe=False)
+
+class RecipeListViewTag(RecipeListViewBase):
+    template_name = 'recipes/pages/search.html'
+
+    def get_queryset(self,*args, **kwargs):
+
+        qs = super().get_queryset(*args, **kwargs)
+        qs = qs.filter(tags__slug=self.kwargs.get('slug',''))
+        qs = qs.prefetch_related('tags')
+        return qs
+        
+    def get_context_data(self, *args, **kwargs):
+        context = super().get_context_data(*args, **kwargs)
+        page_title = Tag.objects.filter(slug=self.kwargs.get('slug','')).first()
+
+        if not page_title:
+            page_title = 'No recipes found'
+
+        page_title = f'{page_title} - Tag'
+        context.update({
+            'page_title' : page_title
+            })
+        return context

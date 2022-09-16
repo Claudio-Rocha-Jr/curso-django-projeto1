@@ -1,7 +1,12 @@
 from django.contrib.auth.models import User
+from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
+from django.db.models import F, Q, Value
+from django.db.models.aggregates import Count
+from django.db.models.functions import Concat
 from django.urls import reverse
 from django.utils.text import slugify
+from tag.models import Tag
 
 
 class Category(models.Model):
@@ -11,7 +16,18 @@ class Category(models.Model):
         return self.name
 
 
+class RecipeManager(models.Manager):
+    def get_published(self):
+        return self.filter(
+            is_published = True
+        )
+    def get_full_name(self,qty):
+        return self.all().annotate(
+            author_full_name=Concat(F('author__first_name'),Value(' '),F('author__last_name'))
+        )[:qty]
+        
 class Recipe(models.Model):
+    objects = RecipeManager()
     title = models.CharField(max_length=65)
     description = models.CharField(max_length=165)
     slug = models.SlugField(unique=True)
@@ -27,6 +43,8 @@ class Recipe(models.Model):
     cover = models.ImageField(upload_to='recipes/covers/%Y/%m/%d/', blank=True, default='')
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True, default=None)
     author = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    #tags = GenericRelation(Tag, related_query_name='recipes')
+    tags = models.ManyToManyField(Tag)
 
     def __str__(self):
         return self.title
@@ -39,3 +57,5 @@ class Recipe(models.Model):
             slug = f'{slugify(self.title)}'
             self.slug = slug
         return super().save(*args, **kwargs)
+
+
