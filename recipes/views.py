@@ -267,3 +267,9 @@ class RecipeListViewTag(RecipeListViewBase):
             'page_title' : page_title
             })
         return context
+
+def iframe(request):#CARREGAR
+
+    return render(request,'recipes/pages/iframe.html', context = {
+        'page_title':'iframe',
+    })
